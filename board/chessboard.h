@@ -1,5 +1,5 @@
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef CHESSBOARD_H
+#define CHESSBOARD_H
 
 
 #define BOARD_SIZE 8
@@ -10,12 +10,12 @@
 #include "board/square.h"
 #include "player/player.h"
 
-class Board : public QObject
+class ChessBoard : public QObject
 {
     Q_OBJECT
 public:
-    explicit Board(Player *currentPlayer, int gametype, QObject *parent = 0);
-    Board(const Board &board);
+    explicit ChessBoard(Player *currentPlayer, int gametype, QObject *parent = 0);
+    ChessBoard(const ChessBoard &board);
 
     // TODO move intitialization to constructor
     const int m_direction[8][2] = {{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
@@ -58,7 +58,7 @@ public:
 
     QVector<Square* > *m_legalMoves;
 
-    QVector<Board *> makeLegalMoves();
+    QVector<ChessBoard *> makeLegalMoves();
 
     /**
      * @brief makeMove actually make a move that is legal.
@@ -103,4 +103,4 @@ signals:
 public slots:
 };
 
-#endif // BOARD_H
+#endif // CHESSBOARD_H

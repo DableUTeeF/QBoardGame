@@ -6,6 +6,7 @@
 #include <QDebug>
 
 #include "gamelogic/gameengine.h"
+#include "gamelogic/chessengine.h"
 #include "board/board.h"
 #include "ui/uigamescene.h"
 
@@ -18,7 +19,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(int type, QWidget *parent = 0);
+    int gametype;
     ~MainWindow();
 
 public slots:
@@ -32,6 +34,7 @@ private:
     int m_iBoardSize;
 
     GameEngine *m_gameEngine;
+    ChessEngine *m_chessEngine;
     UIGameScene *m_uiGameScene;
     Board *m_board;
 };

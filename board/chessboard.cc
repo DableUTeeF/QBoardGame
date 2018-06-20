@@ -1,6 +1,6 @@
-#include "board.h"
+#include "chessboard.h"
 
-Board::Board(Player *currentPlayer, int game, QObject *parent) : QObject(parent),
+ChessBoard::ChessBoard(Player *currentPlayer, int game, QObject *parent) : QObject(parent),
   m_boardMatrix(BOARD_SIZE, QVector<Square* >(BOARD_SIZE))
 {
     gametype = game;
@@ -8,7 +8,7 @@ Board::Board(Player *currentPlayer, int game, QObject *parent) : QObject(parent)
     newBoard();
 }
 
-Board::Board(const Board &board)
+ChessBoard::ChessBoard(const ChessBoard &board)
 {
     m_legalMoves = new QVector<Square* >;
 
@@ -25,17 +25,17 @@ Board::Board(const Board &board)
     m_gameOver = board.m_gameOver;
 }
 
-Square *Board::getSquare(int x, int y) const
+Square *ChessBoard::getSquare(int x, int y) const
 {
     return m_boardMatrix[x][y];
 }
 
-Square::State Board::getSquareState(int x, int y)
+Square::State ChessBoard::getSquareState(int x, int y)
 {
     return m_boardMatrix[x][y]->getSquareState();
 }
 
-void Board::newBoard()
+void ChessBoard::newBoard()
 {
     m_legalMoves = new QVector<Square* >;
 
@@ -86,7 +86,7 @@ void Board::newBoard()
     m_gameOver = false;
 }
 
-void Board::countDisks(void)
+void ChessBoard::countDisks(void)
 {
     m_numberOfBlackDisks = 0;
     m_numberOfWhiteDisks = 0;
@@ -116,7 +116,7 @@ void Board::countDisks(void)
     qDebug() << "There are" << m_numberOfDisks << "total disks";
 }
 
-bool Board::legalMove(int x, int y)
+bool ChessBoard::legalMove(int x, int y)
 {
     //qDebug() << "--------------------------- Check new legal Move at -------------------------------";
     // check if inside board
@@ -133,57 +133,51 @@ bool Board::legalMove(int x, int y)
     // test left for possible flips
     bool moveLegal = false;
     // For Othello
-    if(gametype==0)
+    for(int dir = 0; dir < BOARD_SIZE; dir++)
     {
-        for(int dir = 0; dir < BOARD_SIZE; dir++)
+        int dx = m_direction[dir][0];
+        int dy = m_direction[dir][1];
+        int tx = x + 2*dx;
+        int ty = y + 2*dy;
+        // need to be at least 2 grids away from the edge
+        if (!onBoard(tx, ty))
         {
-            int dx = m_direction[dir][0];
-            int dy = m_direction[dir][1];
-            int tx = x + 2*dx;
-            int ty = y + 2*dy;
-            // need to be at least 2 grids away from the edge
-            if (!onBoard(tx, ty))
-            {
-                continue;
-            }
-            //qDebug() << "(tx,ty) = (" << tx << "," << ty << ") is on the board";
+            continue;
+        }
+        //qDebug() << "(tx,ty) = (" << tx << "," << ty << ") is on the board";
 
-            // oppenent disk must be adjacent in the current direction
-            if (m_boardMatrix[x+dx][y+dy]->getOwner() != getOtherPlayer(m_currentPlayer))
-            {
-                QString string = QString(getOtherPlayer(m_currentPlayer));
-                //qDebug() << "but there is no adjacent opponent" << string;
-                continue;
-            }
-            //qDebug() << "Adjacent opponent" << getOtherPlayer(m_currentPlayer) << "found at ([x+dx],[y+dy]) = (" << x+dx << "," << y+dy << ") CurrentPlayer is" << m_currentPlayer->m_color;
+        // oppenent disk must be adjacent in the current direction
+        if (m_boardMatrix[x+dx][y+dy]->getOwner() != getOtherPlayer(m_currentPlayer))
+        {
+            QString string = QString(getOtherPlayer(m_currentPlayer));
+            //qDebug() << "but there is no adjacent opponent" << string;
+            continue;
+        }
+        //qDebug() << "Adjacent opponent" << getOtherPlayer(m_currentPlayer) << "found at ([x+dx],[y+dy]) = (" << x+dx << "," << y+dy << ") CurrentPlayer is" << m_currentPlayer->m_color;
 
-            // as long as we stay on the board going in the current direction, we search for the surrounding disk
-            while(onBoard(tx, ty) && m_boardMatrix[tx][ty]->getOwner() == getOtherPlayer(m_currentPlayer))
-            {
-                tx += dx;
-                ty += dy;
-            }
+        // as long as we stay on the board going in the current direction, we search for the surrounding disk
+        while(onBoard(tx, ty) && m_boardMatrix[tx][ty]->getOwner() == getOtherPlayer(m_currentPlayer))
+        {
+            tx += dx;
+            ty += dy;
+        }
 
-            // if we are still on the board and we found the surrounding disk in the current direction
-            // the move is legal.
-            if(onBoard(tx, ty) && m_boardMatrix[tx][ty]->getOwner() == m_currentPlayer->m_color)
-            {
-                //qDebug() << "Found surrounding disk of Player" << m_currentPlayer->m_color << "at (tx,ty) = (" << tx << "," << ty << ")";
-                moveLegal = true;
-                break;
-            }
+        // if we are still on the board and we found the surrounding disk in the current direction
+        // the move is legal.
+        if(onBoard(tx, ty) && m_boardMatrix[tx][ty]->getOwner() == m_currentPlayer->m_color)
+        {
+            //qDebug() << "Found surrounding disk of Player" << m_currentPlayer->m_color << "at (tx,ty) = (" << tx << "," << ty << ")";
+            moveLegal = true;
+            break;
         }
     }
-    else
-    {
 
-    }
     //qDebug() << "Board::legalMove" << moveLegal;
     return moveLegal;
 
 }
 
-bool Board::getLegalMoves(QVector<Square* > *legalMoves)
+bool ChessBoard::getLegalMoves(QVector<Square* > *legalMoves)
 {
     // this function appends possible moves (legal squares) to the provided QVector legalMoves.
     // this also updates the member variable m_legalMoves. A NULL parameter is use by board itself.
@@ -219,9 +213,9 @@ bool Board::getLegalMoves(QVector<Square* > *legalMoves)
     return legalMovesAvailable;
 }
 
-QVector<Board *> Board::makeLegalMoves()
+QVector<ChessBoard *> Board::makeLegalMoves()
 {
-    QVector<Board *> possibleBoards(1);
+    QVector<ChessBoard *> possibleBoards(1);
 
     // get possible moves (squares)
     getLegalMoves(NULL);
@@ -235,7 +229,7 @@ QVector<Board *> Board::makeLegalMoves()
     }
 }
 
-void Board::makeMove(int x, int y)
+void ChessBoard::makeMove(int x, int y)
 {
     // TODO update number of moves if valid;
     // TODO append to a tree?!
@@ -314,12 +308,12 @@ void Board::makeMove(int x, int y)
     //m_boardStack<Board*
 }
 
-bool Board::undoMove()
+bool ChessBoard::undoMove()
 {
 
 }
 
-bool Board::onBoard(int x, int y)
+bool ChessBoard::onBoard(int x, int y)
 {
     if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE)
     {
@@ -332,7 +326,7 @@ bool Board::onBoard(int x, int y)
     return false;
 }
 
-Player::Color Board::getOtherPlayer(Player *currentPlayer)
+Player::Color ChessBoard::getOtherPlayer(Player *currentPlayer)
 {
     if (currentPlayer->m_color == Player::BLACK)
     {

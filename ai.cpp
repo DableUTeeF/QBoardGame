@@ -28,53 +28,53 @@ Square* AI::makeMove(Board *currentBoard)
     return square;
 }
 
+/*
+int max(Board *board, int depth)
+{
+    QVector<Square*> *legalMoves;
 
-//int max(Board *board, int depth)
-//{
-//    QVector<Square*> *legalMoves;
+    if (board->getLegalMoves(legalMoves) == false || depth == 0)
+    {
+        return evaluateBoard();
+    }
+    int maxWert = -10000;
 
-//    if (board->getLegalMoves(legalMoves) == false || depth == 0)
-//    {
-//        return evaluateBoard();
-//    }
-//    int maxWert = -10000;
+    int length = legalMoves->length();
 
-//    int length = legalMoves->length();
+    foreach (Square *currentMove, legalMoves) {
+        board->makeMove(currentMove->m_x, currentMove->m_y);
+        int wert = min(-spieler, depth-1);
+        macheZugRueckgaengig();
+    }
 
-//    foreach (Square *currentMove, legalMoves) {
-//        board->makeMove(currentMove->m_x, currentMove->m_y);
-//        int wert = min(-spieler, depth-1);
-//        macheZugRueckgaengig();
-//    }
+    while (legalMoves->) {
+        int wert = min(-spieler, depth-1);
+        macheZugRueckgaengig();
+        if (wert > maxWert) {
+            maxWert = wert;
+            if (depth == gewuenschteTiefe)
+                gespeicherterZug = Zug;
+        }
+    }
+    return maxWert;
+}
 
-//    while (legalMoves->) {
-//        int wert = min(-spieler, depth-1);
-//        macheZugRueckgaengig();
-//        if (wert > maxWert) {
-//            maxWert = wert;
-//            if (depth == gewuenschteTiefe)
-//                gespeicherterZug = Zug;
-//        }
-//    }
-//    return maxWert;
-//}
-
-//int min(int spieler, int tiefe) {
-//    if (tiefe == 0 or keineZuegeMehr(spieler))
-//        return bewerten();
-//    int minWert = unendlich;
-//    generiereMoeglicheZuege(spieler);
-//    while (noch Zug da) {
-//        fuehreNaechstenZugAus();
-//        int wert = max(-spieler, tiefe-1);
-//        macheZugRueckgaengig();
-//        if (wert < minWert) {
-//            minWert = wert;
-//        }
-//    }
-//    return minWert;
-//}
-
+int min(int spieler, int tiefe) {
+    if (tiefe == 0 or keineZuegeMehr(spieler))
+        return bewerten();
+    int minWert = unendlich;
+    generiereMoeglicheZuege(spieler);
+    while (noch Zug da) {
+        fuehreNaechstenZugAus();
+        int wert = max(-spieler, tiefe-1);
+        macheZugRueckgaengig();
+        if (wert < minWert) {
+            minWert = wert;
+        }
+    }
+    return minWert;
+}
+*/
 
 
 int AI::alphaBeta(Board *board, int depth, int alpha, int beta, bool maximizingPlayer)

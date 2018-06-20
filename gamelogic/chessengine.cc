@@ -1,6 +1,6 @@
-#include "gameengine.h"
+#include "chessengine.h"
 #include "main/endgame.h"
-GameEngine::GameEngine(QObject *parent, UIGameScene *uiGameScene, QTextEdit *eventList, QTextEdit *infoList) : QObject(parent)
+ChessEngine::ChessEngine(QObject *parent, UIGameScene *uiGameScene, QTextEdit *eventList, QTextEdit *infoList) : QObject(parent)
 {
     m_uiGameScene = uiGameScene;
     m_eventList = eventList;
@@ -9,12 +9,12 @@ GameEngine::GameEngine(QObject *parent, UIGameScene *uiGameScene, QTextEdit *eve
     m_legalMoves = new QVector<Square* >;
 }
 
-GameEngine::~GameEngine()
+ChessEngine::~ChessEngine()
 {
 
 }
 
-void GameEngine::startGame(int numberOfHumans, double timeLimit)
+void ChessEngine::startGame(int numberOfHumans, double timeLimit)
 {
     m_numberOfHumans = numberOfHumans;
     createPlayers(m_numberOfHumans);
@@ -28,7 +28,7 @@ void GameEngine::startGame(int numberOfHumans, double timeLimit)
 
     m_gameOver = false;
 
-    m_board = new Board(m_currentPlayer, 0);  // Tehe 0 is for Othello, use 1 for Checker
+    m_board = new ChessBoard(m_currentPlayer, 1);  // Tehe 0 is for Othello, use 1 for Checker
 
     connect(m_board, SIGNAL(signalBoardChanged(int,int,Player::Color)), this, SLOT(updateUI(int,int,Player::Color)));
 
@@ -47,16 +47,16 @@ void GameEngine::startGame(int numberOfHumans, double timeLimit)
     m_ai = new AI(m_board);
 
 
-    if (m_numberOfHumans == 1 && m_currentPlayer->m_type == Player::COMPUTER)
-    {
-        Square* square = m_ai->makeMove(m_board);
-        revertAllowedUISquares(square->m_x, square->m_y);
-        togglePlayer();
-    }
+//    if (m_numberOfHumans == 1 && m_currentPlayer->m_type == Player::COMPUTER)
+//    {
+//        Square* square = m_ai->makeMove(m_board);
+//        revertAllowedUISquares(square->m_x, square->m_y);
+//        togglePlayer();
+//    }
 
 }
 
-void GameEngine::mouseReleased(QPointF point)
+void ChessEngine::mouseReleased(QPointF point)
 {
     qDebug() << "PlayerType" << m_currentPlayer->m_type;
     if (m_numberOfHumans == 1 && m_currentPlayer->m_type == Player::COMPUTER)
@@ -72,7 +72,7 @@ void GameEngine::mouseReleased(QPointF point)
     eventHandling(x, y);
 }
 
-void GameEngine::createPlayers(int numberOfHumans)
+void ChessEngine::createPlayers(int numberOfHumans)
 {
     if (numberOfHumans == 2)
     {
@@ -93,7 +93,7 @@ void GameEngine::createPlayers(int numberOfHumans)
     // TODO set players correctly according to parameter numberOfHumans
 }
 
-bool GameEngine::gameOver()
+bool ChessEngine::gameOver()
 {
     // check if current player has options to make a move
     if (m_board->getLegalMoves(m_legalMoves) == true)
@@ -122,7 +122,7 @@ bool GameEngine::gameOver()
     return true;
 }
 
-QString GameEngine::getGameStats()
+QString ChessEngine::getGameStats()
 {
     QString gameResult;
 
@@ -152,7 +152,7 @@ QString GameEngine::getGameStats()
     return gameResult;
 }
 
-void GameEngine::makePass()
+void ChessEngine::makePass()
 {
     if (m_currentPlayer->m_color == Player::BLACK)
     {
@@ -167,7 +167,7 @@ void GameEngine::makePass()
 
 }
 
-void GameEngine::eventHandling(int x, int y)
+void ChessEngine::eventHandling(int x, int y)
 {
     // first check if the game is over
     if (m_gameOver)
@@ -222,11 +222,11 @@ void GameEngine::eventHandling(int x, int y)
         break;
 
     case Player::NONE:
-        qDebug() << "GameEngine::eventHandling" << "Player::NONE?! Debug this";
+        qDebug() << "ChessEngine::eventHandling" << "Player::NONE?! Debug this";
         break;
 
     default:
-        qDebug() << "GameEngine::eventHandling" << "default case. Debug this";
+        qDebug() << "ChessEngine::eventHandling" << "default case. Debug this";
         break;
     }
 
@@ -276,7 +276,7 @@ void GameEngine::eventHandling(int x, int y)
     updateEventText(eventString);
 }
 
-void GameEngine::updateUI(int x, int y, Player::Color currentPlayer)
+void ChessEngine::updateUI(int x, int y, Player::Color currentPlayer)
 {
     // update chosen square with player color
     switch (currentPlayer) {
@@ -294,7 +294,7 @@ void GameEngine::updateUI(int x, int y, Player::Color currentPlayer)
     }
 }
 
-void GameEngine::updateInfoText(QString string)
+void ChessEngine::updateInfoText(QString string)
 {
     m_infoList->setText(string);
     switch (m_currentPlayer->m_color)
@@ -314,19 +314,19 @@ void GameEngine::updateInfoText(QString string)
     }
 }
 
-void GameEngine::updateEventText(QString string)
+void ChessEngine::updateEventText(QString string)
 {
     m_eventList->append(string);
 }
 
-double GameEngine::getThinkingTime()
+double ChessEngine::getThinkingTime()
 {
     m_elapsedTime = m_thinkingTime.elapsed();
     m_elapsedTime = m_elapsedTime/1000.0;
     return m_elapsedTime;
 }
 
-void GameEngine::togglePlayer()
+void ChessEngine::togglePlayer()
 {
 
     // TODO comment or delet; just for debugging
@@ -338,8 +338,8 @@ void GameEngine::togglePlayer()
     switch(m_currentPlayer->m_color)
     {
     case Player::BLACK:
-        qDebug() << "BLACK GameEngine::togglePlayer before" << "m_currentPlayer" << m_currentPlayer;
-        qDebug() << "BLACK GameEngine::togglePlayer before" << "m_opponentPlayer" << m_currentPlayer;
+        qDebug() << "BLACK ChessEngine::togglePlayer before" << "m_currentPlayer" << m_currentPlayer;
+        qDebug() << "BLACK ChessEngine::togglePlayer before" << "m_opponentPlayer" << m_currentPlayer;
         m_currentPlayer->m_color = Player::WHITE;
         m_opponentPlayer->m_color = Player::BLACK;
 
@@ -358,12 +358,12 @@ void GameEngine::togglePlayer()
         //dummyPlayer = &m_currentPlayer;
         //m_currentPlayer = &m_opponentPlayer;
         //m_opponentPlayer = &dummyPlayer;
-        //qDebug() << "BLACK GameEngine::togglePlayer after" << "m_currentPlayer" << m_currentPlayer;
-        //qDebug() << "BLACK GameEngine::togglePlayer after" << "m_opponentPlayer" << m_currentPlayer;
+        //qDebug() << "BLACK ChessEngine::togglePlayer after" << "m_currentPlayer" << m_currentPlayer;
+        //qDebug() << "BLACK ChessEngine::togglePlayer after" << "m_opponentPlayer" << m_currentPlayer;
         break;
     case Player::WHITE:
-        qDebug() << "WHITE GameEngine::togglePlayer before" << "m_currentPlayer" << m_currentPlayer;
-        qDebug() << "WHITE GameEngine::togglePlayer before" << "m_opponentPlayer" << m_currentPlayer;
+        qDebug() << "WHITE ChessEngine::togglePlayer before" << "m_currentPlayer" << m_currentPlayer;
+        qDebug() << "WHITE ChessEngine::togglePlayer before" << "m_opponentPlayer" << m_currentPlayer;
         m_currentPlayer->m_color = Player::BLACK;
         m_opponentPlayer->m_color = Player::WHITE;
 
@@ -379,8 +379,8 @@ void GameEngine::togglePlayer()
         }
 
 
-        qDebug() << "WHITE GameEngine::togglePlayer after" << "m_currentPlayer" << m_currentPlayer;
-        qDebug() << "WHITE GameEngine::togglePlayer after" << "m_opponentPlayer" << m_currentPlayer;
+        qDebug() << "WHITE ChessEngine::togglePlayer after" << "m_currentPlayer" << m_currentPlayer;
+        qDebug() << "WHITE ChessEngine::togglePlayer after" << "m_opponentPlayer" << m_currentPlayer;
         break;
     default:
         m_currentPlayer->m_color = Player::NONE;
@@ -389,12 +389,12 @@ void GameEngine::togglePlayer()
         break;
     }
     updateInfoText("Current Player");
-    //qDebug() << "GameEngine::nextPlayer" << m_currentPlayer->m_color;
+    //qDebug() << "ChessEngine::nextPlayer" << m_currentPlayer->m_color;
 
     showLegalMoves();
 }
 
-void GameEngine::showLegalMoves()
+void ChessEngine::showLegalMoves()
 {
     // clear list first (forget previous legal moves)
     //m_legalMoves->clear();
@@ -409,7 +409,7 @@ void GameEngine::showLegalMoves()
     }
 }
 
-void GameEngine::revertAllowedUISquares(int x, int y)
+void ChessEngine::revertAllowedUISquares(int x, int y)
 {
     // revert allowed squares to Board state that were NOT picked by current player
     Square *movedSquare = m_board->getSquare(x, y);
@@ -420,7 +420,7 @@ void GameEngine::revertAllowedUISquares(int x, int y)
     }
 }
 
-void GameEngine::counter()
+void ChessEngine::counter()
 {
 
 }

@@ -11,10 +11,11 @@ UIGameScene::UIGameScene(QObject * parent) : QGraphicsScene(parent)
     initUIGameScene();
 }
 
-UIGameScene::UIGameScene(QObject *parent, int numberColumns, int numberRows) : QGraphicsScene(parent),
+UIGameScene::UIGameScene(QObject *parent, int numberColumns, int numberRows, int type) : QGraphicsScene(parent),
     m_board(numberRows, QVector<UISquare *>(numberColumns))
 {
     m_sizeSceneRect = 500;
+    gametype = type;
     m_squareWidth = m_sizeSceneRect / static_cast<double>(numberColumns);
     m_squareHeight = m_sizeSceneRect / static_cast<double>(numberRows);
     m_numberColumns = numberColumns;
@@ -59,8 +60,30 @@ void UIGameScene::drawBoard()
             m_board[x][y]->setSize(m_squareHeight, m_squareWidth);
         }
     }
-    m_board[3][3]->setState(UISquare::WHITE);
-    m_board[3][4]->setState(UISquare::BLACK);
-    m_board[4][3]->setState(UISquare::BLACK);
-    m_board[4][4]->setState(UISquare::WHITE);
+    if(gametype==0)
+    {
+        m_board[3][3]->setState(UISquare::WHITE);
+        m_board[3][4]->setState(UISquare::BLACK);
+        m_board[4][3]->setState(UISquare::BLACK);
+        m_board[4][4]->setState(UISquare::WHITE);
+    }
+    else if(gametype==1)
+    {
+        m_board[1][0]->setState(UISquare::WHITE);
+        m_board[3][0]->setState(UISquare::WHITE);
+        m_board[5][0]->setState(UISquare::WHITE);
+        m_board[7][0]->setState(UISquare::WHITE);
+        m_board[0][1]->setState(UISquare::WHITE);
+        m_board[2][1]->setState(UISquare::WHITE);
+        m_board[4][1]->setState(UISquare::WHITE);
+        m_board[6][1]->setState(UISquare::WHITE);
+        m_board[1][6]->setState(UISquare::BLACK);
+        m_board[3][6]->setState(UISquare::BLACK);
+        m_board[5][6]->setState(UISquare::BLACK);
+        m_board[7][6]->setState(UISquare::BLACK);
+        m_board[0][7]->setState(UISquare::BLACK);
+        m_board[2][7]->setState(UISquare::BLACK);
+        m_board[4][7]->setState(UISquare::BLACK);
+        m_board[6][7]->setState(UISquare::BLACK);
+    }
 }

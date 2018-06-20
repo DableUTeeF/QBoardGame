@@ -10,7 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = othello
 TEMPLATE = app
-
+INCLUDEPATH += /usr/local/lib/include
 
 SOURCES += main/main.cpp\
         main/mainwindow.cpp \
@@ -24,7 +24,10 @@ SOURCES += main/main.cpp\
         ui/uisquare.cpp \
         ui/uigamescene.cpp \
         gamelogic/gameengine.cpp \
-    dialog.cc
+        main/dialog.cc \
+        main/endgame.cc \
+    gamelogic/chessengine.cc \
+    board/chessboard.cc
 
 HEADERS  += main/mainwindow.h \
         board/board.h \
@@ -37,7 +40,11 @@ HEADERS  += main/mainwindow.h \
         ui/uisquare.h \
         ui/uigamescene.h \
         gamelogic/gameengine.h \
-    dialog.h
+        main/dialog.h \
+        main/endgame.h \
+    gamelogic/chessengine.h \
+    board/chessboard.h
 
 FORMS    += main/mainwindow.ui \
-    dialog.ui
+            main/dialog.ui \
+            main/endgame.ui
