@@ -1,10 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(int type, QWidget *parent) : QMainWindow(parent),
+MainWindow::MainWindow(int type, Dialog *base, QWidget *parent) : QMainWindow(parent),
     ui(new Ui::MainWindow), m_iBoardSize(8) // TODO where is BoardSize actually used?
 {
     ui->setupUi(this);
+    base_diag = base;
     gametype = type;
     this->setFixedSize(this->geometry().width(),this->geometry().height());
 
@@ -30,7 +31,11 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-
+void MainWindow::closeEvent (QCloseEvent *event)
+{
+    delete ui;
+    base_diag->show();
+}
 void MainWindow::startNewGame()
 {
     qDebug() << "Starting New Game!";
@@ -41,7 +46,6 @@ void MainWindow::startNewGame()
     // create new GameLogic here to avoid swalloing KeyBoard Input
     m_gameEngine = new GameEngine(this, m_uiGameScene, ui->textEditEvents, ui->textEditInfo);
     m_chessEngine = new ChessEngine(this, m_uiGameScene, ui->textEditEvents, ui->textEditInfo);
-    connect(m_uiGameScene, SIGNAL(newMouseEvent(QPointF)), m_gameEngine, SLOT(mouseReleased(QPointF)));
     //ui->graphicsViewBoard->setScene(m_uiGameScene);
 
     // TODO let palyer choose color.
@@ -51,8 +55,14 @@ void MainWindow::startNewGame()
     // get user input for time limit
     double timeLimit = ui->lineEditTimeLimit->text().toDouble();
     if(gametype==0)
+    {
+        connect(m_uiGameScene, SIGNAL(newMouseEvent(QPointF)), m_gameEngine, SLOT(mouseReleased(QPointF)));
         m_gameEngine->startGame(numberOfHumanPlayers, timeLimit);
+    }
     else
+    {
+        connect(m_uiGameScene, SIGNAL(newMouseEvent(QPointF)), m_chessEngine, SLOT(mouseReleased(QPointF)));
         m_chessEngine->startGame(numberOfHumanPlayers, timeLimit);
+    }
 
 }

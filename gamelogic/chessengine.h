@@ -27,7 +27,9 @@ public:
 
     void startGame(int numberOfHumans = 1, double timeLimit = 10);
 
-    Board *m_board;
+    int clickedlocation[2] = {-1, -1};
+
+    ChessBoard *m_board;
 
 public slots:
     void mouseReleased(QPointF point);
@@ -55,6 +57,8 @@ private:
     void createPlayers(int numberOfHumans);
 
     void eventHandling(int x, int y);
+
+    void firstclickHandling(int x, int y);
     /**
      * @brief togglePlayer
      */

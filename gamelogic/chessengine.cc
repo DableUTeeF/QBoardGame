@@ -1,5 +1,6 @@
 #include "chessengine.h"
 #include "main/endgame.h"
+#include <cmath>
 ChessEngine::ChessEngine(QObject *parent, UIGameScene *uiGameScene, QTextEdit *eventList, QTextEdit *infoList) : QObject(parent)
 {
     m_uiGameScene = uiGameScene;
@@ -44,7 +45,7 @@ void ChessEngine::startGame(int numberOfHumans, double timeLimit)
     //timer.elapsed() << "milliseconds";
 
     // create the AI
-    m_ai = new AI(m_board);
+//    m_ai = new AI(m_board);
 
 
 //    if (m_numberOfHumans == 1 && m_currentPlayer->m_type == Player::COMPUTER)
@@ -58,18 +59,71 @@ void ChessEngine::startGame(int numberOfHumans, double timeLimit)
 
 void ChessEngine::mouseReleased(QPointF point)
 {
-    qDebug() << "PlayerType" << m_currentPlayer->m_type;
-    if (m_numberOfHumans == 1 && m_currentPlayer->m_type == Player::COMPUTER)
-    {
-        qDebug() << "Computer move! Don't click!";
-        makePass();
-        return;
-    }
+//    qDebug() << "PlayerType" << m_currentPlayer->m_type;
+
+
     int x = point.x() / m_uiGameScene->m_sizeSceneRect * m_uiGameScene->m_numberColumns;
     int y = point.y() / m_uiGameScene->m_sizeSceneRect * m_uiGameScene->m_numberRows;
     // TODO comment all qDebug()s
     //qDebug() << "Mouse pointer is at" << point << "x" << x << "y" << y;
-    eventHandling(x, y);
+    if(!m_board->clicked)
+    {
+        firstclickHandling(x, y);
+    }
+    else
+    {
+        eventHandling(x, y);
+    }
+}
+
+void ChessEngine::firstclickHandling(int x, int y)
+{
+    if(m_board->m_boardMatrix[x][y]->isEmpty() || m_board->m_boardMatrix[x][y]->getOwner() != m_currentPlayer->m_color){
+        updateEventText("Wrong squared");
+        return;
+    }
+    m_board->clicked = !m_board->clicked;
+    clickedlocation[0] = x;
+    clickedlocation[1] = y;
+    QString state = "";
+    for(int i = 0; i < 8; i++)
+    {
+        for(int j = 0; j < 8; j++)
+        {
+            if(m_board->m_pieceState[j][i] >= 0)
+            {
+                state += " ";
+            }
+            state += " " + QString::number(m_board->m_pieceState[j][i]);
+        }
+        state += "\n";
+    }
+    updateEventText(state);
+
+}
+
+void ChessEngine::eventHandling(int x, int y)
+{
+    // first check if the game is over
+//    updateEventText(QString::number(x) + "," +
+//                    QString::number(y) + "," +
+//                    QString::number(clickedlocation[0]) + "," +
+//                    QString::number(clickedlocation[1]));
+    m_board->clicked = !m_board->clicked;
+    if (m_gameOver)
+        return;
+    else if(!m_board->legalMove(clickedlocation[0], clickedlocation[1], x, y))
+    {
+        updateEventText("Illegal move");
+        return;
+    }
+
+    // this string will hopefully overwritten by a legal event.
+//    QString eventString = "Something went wrong in eventHandling";
+    m_board->makeMove(clickedlocation[0], clickedlocation[1], x, y);
+//    eventString = "Something going to be fine in eventHandling";
+//    updateEventText(eventString);
+    togglePlayer();
 }
 
 void ChessEngine::createPlayers(int numberOfHumans)
@@ -130,9 +184,6 @@ QString ChessEngine::getGameStats()
     int numberOfBlackDisks = m_board->m_numberOfBlackDisks;
     int numberOfWhiteDisks = m_board->m_numberOfWhiteDisks;
 
-    // TODO is it needed?
-    int numberOfDisks = m_board->m_numberOfDisks;
-
     // TODO check rules ... count empty squares too???
     if (numberOfBlackDisks > numberOfWhiteDisks)
     {
@@ -164,116 +215,6 @@ void ChessEngine::makePass()
     }
     m_numberOfTotalMoves++;
     togglePlayer();
-
-}
-
-void ChessEngine::eventHandling(int x, int y)
-{
-    // first check if the game is over
-    if (m_gameOver)
-        return;
-
-    // this string will hopefully overwritten by a legal event.
-    QString eventString = "Something went wrong in eventHandling";
-
-    Player::Color currentPlayer = m_currentPlayer->m_color;
-    switch(currentPlayer)
-    {
-    case Player::BLACK:
-        if (m_board->legalMove(x, y))
-        {
-            m_board->makeMove(x, y);
-            revertAllowedUISquares(x, y);
-            //updateUI(x, y, Player::BLACK);
-            m_numberOfActualMoves++;
-            m_numberOfTotalMoves++;
-            eventString = QString(QString::number(m_numberOfActualMoves) + ". Black played at (" +
-                                  QString::number(x) + "," + QString::number(y) +
-                                  ") in " + QString::number(getThinkingTime()) + " sec");
-
-            togglePlayer();
-        }
-        // check if game is over if no legal move possible
-//        else
-//        {
-//            gameOver();
-//        }
-        break;
-
-    case Player::WHITE:
-        if (m_board->legalMove(x, y))
-        {
-            m_board->makeMove(x, y);
-            revertAllowedUISquares(x, y);
-            //updateUI(x, y, Player::WHITE);
-            m_numberOfActualMoves++;
-            m_numberOfTotalMoves++;
-            eventString = QString(QString::number(m_numberOfActualMoves) + ". White played at (" +
-                                  QString::number(x) + "," + QString::number(y) +
-                                  ") in " + QString::number(getThinkingTime()) + " sec");
-
-            togglePlayer();
-        }
-        // check if game is over if no legal move possible
-//        else
-//        {
-//            gameOver();
-//        }
-        break;
-
-    case Player::NONE:
-        qDebug() << "ChessEngine::eventHandling" << "Player::NONE?! Debug this";
-        break;
-
-    default:
-        qDebug() << "ChessEngine::eventHandling" << "default case. Debug this";
-        break;
-    }
-
-
-    bool movesAvailable = m_board->getLegalMoves(m_legalMoves);
-//    if (!movesAvailable)
-//    {
-//        gameOver();
-//    }
-
-    updateEventText(eventString);
-
-    // restart the stopwatch
-    m_elapsedTime = 0;
-    m_thinkingTime.start();
-
-    // make a new computer move if it is his turn.
-    if (!gameOver() && m_numberOfHumans == 1 && m_currentPlayer->m_type == Player::COMPUTER)
-    {
-        Square* square = m_ai->makeMove(m_board);
-        if (square != NULL)
-        {
-            revertAllowedUISquares(square->m_x, square->m_y);
-            //updateUI(square->m_x, square->m_y, Player::BLACK); // UPDATE UI?????
-            m_numberOfActualMoves++;
-            m_numberOfTotalMoves++;
-            eventString = QString(QString::number(m_numberOfActualMoves) + ". Computer played at (" +
-                                QString::number(square->m_x) + "," + QString::number(square->m_y) +
-                                ") in " + QString::number(getThinkingTime()) + " sec");
-            togglePlayer();
-        }
-        else // there was no legal move possible because legalMoves list is empty -> see m_ai->makeMove
-        {
-            makePass();
-        }
-
-        bool movesAvailable = m_board->getLegalMoves(m_legalMoves);
-        if (!movesAvailable)
-        {
-            gameOver();
-        }
-
-        // restart the stopwatch
-        m_elapsedTime = 0;
-        m_thinkingTime.start();
-    }
-    updateEventText(eventString);
 }
 
 void ChessEngine::updateUI(int x, int y, Player::Color currentPlayer)
@@ -330,16 +271,16 @@ void ChessEngine::togglePlayer()
 {
 
     // TODO comment or delet; just for debugging
-    m_board->countDisks();
+//    m_board->countDisks();
 
-    Player **dummyPlayer;
+//    Player **dummyPlayer;
 
     // TODO swap pointers?????????? this is #?!
     switch(m_currentPlayer->m_color)
     {
     case Player::BLACK:
-        qDebug() << "BLACK ChessEngine::togglePlayer before" << "m_currentPlayer" << m_currentPlayer;
-        qDebug() << "BLACK ChessEngine::togglePlayer before" << "m_opponentPlayer" << m_currentPlayer;
+//        qDebug() << "BLACK ChessEngine::togglePlayer before" << "m_currentPlayer" << m_currentPlayer;
+//        qDebug() << "BLACK ChessEngine::togglePlayer before" << "m_opponentPlayer" << m_currentPlayer;
         m_currentPlayer->m_color = Player::WHITE;
         m_opponentPlayer->m_color = Player::BLACK;
 
@@ -362,8 +303,8 @@ void ChessEngine::togglePlayer()
         //qDebug() << "BLACK ChessEngine::togglePlayer after" << "m_opponentPlayer" << m_currentPlayer;
         break;
     case Player::WHITE:
-        qDebug() << "WHITE ChessEngine::togglePlayer before" << "m_currentPlayer" << m_currentPlayer;
-        qDebug() << "WHITE ChessEngine::togglePlayer before" << "m_opponentPlayer" << m_currentPlayer;
+//        qDebug() << "WHITE ChessEngine::togglePlayer before" << "m_currentPlayer" << m_currentPlayer;
+//        qDebug() << "WHITE ChessEngine::togglePlayer before" << "m_opponentPlayer" << m_currentPlayer;
         m_currentPlayer->m_color = Player::BLACK;
         m_opponentPlayer->m_color = Player::WHITE;
 
@@ -379,13 +320,13 @@ void ChessEngine::togglePlayer()
         }
 
 
-        qDebug() << "WHITE ChessEngine::togglePlayer after" << "m_currentPlayer" << m_currentPlayer;
-        qDebug() << "WHITE ChessEngine::togglePlayer after" << "m_opponentPlayer" << m_currentPlayer;
+//        qDebug() << "WHITE ChessEngine::togglePlayer after" << "m_currentPlayer" << m_currentPlayer;
+//        qDebug() << "WHITE ChessEngine::togglePlayer after" << "m_opponentPlayer" << m_currentPlayer;
         break;
     default:
         m_currentPlayer->m_color = Player::NONE;
         m_opponentPlayer->m_color = Player::NONE;
-        qDebug() << "togglePlayers: default case?!";
+//        qDebug() << "togglePlayers: default case?!";
         break;
     }
     updateInfoText("Current Player");

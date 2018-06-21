@@ -45,43 +45,58 @@ void ChessBoard::newBoard()
         {
 
             m_boardMatrix[x][y] = new Square(x,y);
+            if(y<=1)  // White
+            {
+
+                if((x+y) % 2 == 1)
+                {
+                    m_pieceState[x][y] = 1;
+                }
+                else
+                {
+                    m_pieceState[x][y] = 0;
+                }
+            }
+            else if(y>=6)  // Black
+            {
+
+                if((x+y) % 2 == 1)
+                {
+                    m_pieceState[x][y] = -1;
+                }
+                else
+                {
+                    m_pieceState[x][y] = 0;
+                }
+            }
+            else{
+                m_pieceState[x][y] = 0;
+            }
+
         }
     }
-    if(gametype == 0)
-    {
-        m_boardMatrix[3][3]->setSquareState(Square::WHITE);
-        m_boardMatrix[3][4]->setSquareState(Square::BLACK);
-        m_boardMatrix[4][3]->setSquareState(Square::BLACK);
-        m_boardMatrix[4][4]->setSquareState(Square::WHITE);
 
-        m_numberOfBlackDisks = 2;
-        m_numberOfWhiteDisks = 2;
-        m_numberOfDisks = 4;
-    }
-    else if(gametype == 1)
-    {
-        m_boardMatrix[1][0]->setSquareState(Square::WHITE);
-        m_boardMatrix[3][0]->setSquareState(Square::WHITE);
-        m_boardMatrix[5][0]->setSquareState(Square::WHITE);
-        m_boardMatrix[7][0]->setSquareState(Square::WHITE);
-        m_boardMatrix[2][1]->setSquareState(Square::WHITE);
-        m_boardMatrix[4][1]->setSquareState(Square::WHITE);
-        m_boardMatrix[6][1]->setSquareState(Square::WHITE);
-        m_boardMatrix[0][1]->setSquareState(Square::WHITE);
+    m_boardMatrix[1][0]->setSquareState(Square::WHITE);
+    m_boardMatrix[3][0]->setSquareState(Square::WHITE);
+    m_boardMatrix[5][0]->setSquareState(Square::WHITE);
+    m_boardMatrix[7][0]->setSquareState(Square::WHITE);
+    m_boardMatrix[2][1]->setSquareState(Square::WHITE);
+    m_boardMatrix[4][1]->setSquareState(Square::WHITE);
+    m_boardMatrix[6][1]->setSquareState(Square::WHITE);
+    m_boardMatrix[0][1]->setSquareState(Square::WHITE);
 
-        m_boardMatrix[1][6]->setSquareState(Square::BLACK);
-        m_boardMatrix[3][6]->setSquareState(Square::BLACK);
-        m_boardMatrix[5][6]->setSquareState(Square::BLACK);
-        m_boardMatrix[7][6]->setSquareState(Square::BLACK);
-        m_boardMatrix[0][7]->setSquareState(Square::BLACK);
-        m_boardMatrix[2][7]->setSquareState(Square::BLACK);
-        m_boardMatrix[4][7]->setSquareState(Square::BLACK);
-        m_boardMatrix[6][7]->setSquareState(Square::BLACK);
+    m_boardMatrix[1][6]->setSquareState(Square::BLACK);
+    m_boardMatrix[3][6]->setSquareState(Square::BLACK);
+    m_boardMatrix[5][6]->setSquareState(Square::BLACK);
+    m_boardMatrix[7][6]->setSquareState(Square::BLACK);
+    m_boardMatrix[0][7]->setSquareState(Square::BLACK);
+    m_boardMatrix[2][7]->setSquareState(Square::BLACK);
+    m_boardMatrix[4][7]->setSquareState(Square::BLACK);
+    m_boardMatrix[6][7]->setSquareState(Square::BLACK);
 
-        m_numberOfBlackDisks = 8;
-        m_numberOfWhiteDisks = 5;
-        m_numberOfDisks = 16;
-    }
+    m_numberOfBlackDisks = 8;
+    m_numberOfWhiteDisks = 5;
+    m_numberOfDisks = 16;
 
     m_gameOver = false;
 }
@@ -111,69 +126,37 @@ void ChessBoard::countDisks(void)
             }
         }
     }
-    qDebug() << "There are" << m_numberOfBlackDisks << "Black disks";
-    qDebug() << "There are" << m_numberOfWhiteDisks << "White disks";
-    qDebug() << "There are" << m_numberOfDisks << "total disks";
+//    qDebug() << "There are" << m_numberOfBlackDisks << "Black disks";
+//    qDebug() << "There are" << m_numberOfWhiteDisks << "White disks";
+//    qDebug() << "There are" << m_numberOfDisks << "total disks";
 }
 
-bool ChessBoard::legalMove(int x, int y)
+bool ChessBoard::legalMove(int x0, int y0, int x, int y)
 {
-    //qDebug() << "--------------------------- Check new legal Move at -------------------------------";
-    // check if inside board
-    if(!onBoard(x, y))
+    if(!m_boardMatrix[x][y]->isEmpty())
     {
+        // Square is not empty
         return false;
     }
-    // check if pressed square is occupied by player
-    if (!m_boardMatrix[x][y]->isEmpty())
+    else if((x+y) % 2 != 1)
     {
+        // Square is on invalid cross
         return false;
     }
-    //qDebug() << "Board(" << x << "," << y << ") is not occupied" << m_boardMatrix[x][y]->getOwner() << "Square State" << m_boardMatrix[x][y]->getSquareState();
-    // test left for possible flips
-    bool moveLegal = false;
-    // For Othello
-    for(int dir = 0; dir < BOARD_SIZE; dir++)
+    else if(std::abs(m_pieceState[x0][y0])==1)
     {
-        int dx = m_direction[dir][0];
-        int dy = m_direction[dir][1];
-        int tx = x + 2*dx;
-        int ty = y + 2*dy;
-        // need to be at least 2 grids away from the edge
-        if (!onBoard(tx, ty))
+        if(std::abs(x0 - x) > 1 || std::abs(y0 - y) > 1)
         {
-            continue;
+            // Too far square
+            return false;
         }
-        //qDebug() << "(tx,ty) = (" << tx << "," << ty << ") is on the board";
-
-        // oppenent disk must be adjacent in the current direction
-        if (m_boardMatrix[x+dx][y+dy]->getOwner() != getOtherPlayer(m_currentPlayer))
+        else if(m_pieceState[x0][y0] * (y0-y) > 0)
         {
-            QString string = QString(getOtherPlayer(m_currentPlayer));
-            //qDebug() << "but there is no adjacent opponent" << string;
-            continue;
-        }
-        //qDebug() << "Adjacent opponent" << getOtherPlayer(m_currentPlayer) << "found at ([x+dx],[y+dy]) = (" << x+dx << "," << y+dy << ") CurrentPlayer is" << m_currentPlayer->m_color;
-
-        // as long as we stay on the board going in the current direction, we search for the surrounding disk
-        while(onBoard(tx, ty) && m_boardMatrix[tx][ty]->getOwner() == getOtherPlayer(m_currentPlayer))
-        {
-            tx += dx;
-            ty += dy;
-        }
-
-        // if we are still on the board and we found the surrounding disk in the current direction
-        // the move is legal.
-        if(onBoard(tx, ty) && m_boardMatrix[tx][ty]->getOwner() == m_currentPlayer->m_color)
-        {
-            //qDebug() << "Found surrounding disk of Player" << m_currentPlayer->m_color << "at (tx,ty) = (" << tx << "," << ty << ")";
-            moveLegal = true;
-            break;
+            // Backward move is not allowed
+            return false;
         }
     }
-
-    //qDebug() << "Board::legalMove" << moveLegal;
-    return moveLegal;
+    return true;
 
 }
 
@@ -196,7 +179,7 @@ bool ChessBoard::getLegalMoves(QVector<Square* > *legalMoves)
     {
         for(int y = 0; y < BOARD_SIZE; y++)
         {
-            if (legalMove(x, y))
+            if (legalMove(NULL, NULL, x, y))
             {
                 allowedSquare = m_boardMatrix[x][y];
 
@@ -213,7 +196,7 @@ bool ChessBoard::getLegalMoves(QVector<Square* > *legalMoves)
     return legalMovesAvailable;
 }
 
-QVector<ChessBoard *> Board::makeLegalMoves()
+QVector<ChessBoard *> ChessBoard::makeLegalMoves()
 {
     QVector<ChessBoard *> possibleBoards(1);
 
@@ -223,89 +206,33 @@ QVector<ChessBoard *> Board::makeLegalMoves()
     // foreach possible move in m_legalMoves list, append the future board to QVector.
     foreach (Square *square, *m_legalMoves)
     {
-        Board *tempBoard = new Board(*this);
-        tempBoard->makeMove(square->m_x, square->m_y);
+        ChessBoard *tempBoard = new ChessBoard(*this);
+        tempBoard->makeMove(square->m_x, square->m_y, 0, 0);
         possibleBoards.append(tempBoard);
     }
 }
 
-void ChessBoard::makeMove(int x, int y)
+void ChessBoard::makeMove(int x0, int y0, int x, int y)
 {
     // TODO update number of moves if valid;
     // TODO append to a tree?!
+    m_boardMatrix[x][y]->setOwner(m_currentPlayer->m_color);
+    m_boardMatrix[x0][y0]->setOwner(Player::NONE);
+    m_boardMatrix[x0][y0]->setSquareState(Square::NONE);
+    m_pieceState[x0][y0] = 0;
 
-    for(int dir = 0; dir < BOARD_SIZE; dir++)
+    // TODO this needs some improvement - see also inside while loop
+    emit signalBoardChanged(x0, y0, Player::NONE);
+    emit signalBoardChanged(x, y, m_currentPlayer->m_color);
+    if (m_currentPlayer->m_color == Player::BLACK)
     {
-        int dx = m_direction[dir][0];
-        int dy = m_direction[dir][1];
-        int tx = x + 2*dx;
-        int ty = y + 2*dy;
-        // need to be at least 2 grids away from the edge
-        if (!onBoard(tx, ty))
-        {
-            continue;
-        }
-        // oppenent piece must be adjacent in the current direction
-        if (m_boardMatrix[x+dx][y+dy]->getOwner() != getOtherPlayer(m_currentPlayer))
-        {
-            continue;
-        }
-        // as long as we stay on the board going in the current direction, we search for the surrounding disk
-        while(onBoard(tx, ty) && m_boardMatrix[tx][ty]->getOwner() == getOtherPlayer(m_currentPlayer))
-        {
-            tx += dx;
-            ty += dy;
-        }
-        // if we are still on the board and we found the surrounding disk in the current direction
-        // the move is legal.
-
-        // go back and flip the pieces if move is legal
-        if(onBoard(tx, ty) && m_boardMatrix[tx][ty]->getOwner() == m_currentPlayer->m_color)
-        {
-            tx -= dx;
-            ty -= dy;
-
-            while(m_boardMatrix[tx][ty]->getOwner() == getOtherPlayer(m_currentPlayer))
-            {
-                //qDebug() << "Flipping" << tx << "," << ty;
-                m_boardMatrix[tx][ty]->setOwner(m_currentPlayer->m_color);
-                if (m_currentPlayer->m_color == Player::BLACK)
-                {
-                    //updateUI(tx, ty, UISquare::BLACK, Player::BLACK);
-                    // TODO: avoid emit if AI move
-                    emit signalBoardChanged(tx, ty, Player::BLACK);
-                }
-                else
-                {
-                    //updateUI(tx, ty, UISquare::WHITE, Player::WHITE);
-                    // TODO: avoid emit if AI move
-                    emit signalBoardChanged(tx, ty, Player::WHITE);
-                }
-
-                tx -= dx;
-                ty -= dy;
-            }
-            // set color of placed disk to current player
-            m_boardMatrix[x][y]->setOwner(m_currentPlayer->m_color);
-
-            // TODO this needs some improvement - see also inside while loop
-            if (m_currentPlayer->m_color == Player::BLACK)
-            {
-                //updateUI(tx, ty, UISquare::BLACK, Player::BLACK);
-                // TODO: avoid emit if AI move
-                emit signalBoardChanged(x, y, Player::BLACK);
-            }
-            else
-            {
-                //updateUI(tx, ty, UISquare::WHITE, Player::WHITE);
-                // TODO: avoid emit if AI move
-                emit signalBoardChanged(x, y, Player::WHITE);
-            }
-
-        }
+        m_pieceState[x][y] = -1;
+    }
+    else
+    {
+        m_pieceState[x][y] = 1;
     }
 
-    //m_boardStack<Board*
 }
 
 bool ChessBoard::undoMove()

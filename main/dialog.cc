@@ -19,14 +19,14 @@ Dialog::~Dialog()
 
 void Dialog::startOthello()
 {
-    MainWindow *othello = new MainWindow(0);
+    MainWindow *othello = new MainWindow(0, this);
     othello->show();
     this->hide();
 }
 
 void Dialog::startChess()
 {
-    MainWindow *chess = new MainWindow(1);
+    MainWindow *chess = new MainWindow(1, this);
     chess->show();
     this->hide();
 }

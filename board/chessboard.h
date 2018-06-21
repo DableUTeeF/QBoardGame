@@ -24,6 +24,7 @@ public:
     Square::State getSquareState(int x, int y);
     int gametype;
     void newBoard();
+    bool clicked = false;
 
     void setPlayers();
 
@@ -36,6 +37,14 @@ public:
     int m_numberOfBlackDisks;
     int m_numberOfWhiteDisks;
     int m_numberOfDisks;
+    int m_pieceState[8][8] = {{0, 0, 0, 0, 0, 0, 0, 0},
+                             {0, 0, 0, 0, 0, 0, 0, 0},
+                             {0, 0, 0, 0, 0, 0, 0, 0},
+                             {0, 0, 0, 0, 0, 0, 0, 0},
+                             {0, 0, 0, 0, 0, 0, 0, 0},
+                             {0, 0, 0, 0, 0, 0, 0, 0},
+                             {0, 0, 0, 0, 0, 0, 0, 0},
+                             {0, 0, 0, 0, 0, 0, 0, 0}};
 
     bool m_gameOver;
 
@@ -46,7 +55,7 @@ public:
      * @param y
      * @return
      */
-    bool legalMove(int x, int y);
+    bool legalMove(int x0, int y0, int x, int y);
 
     /**
      * @brief getLegalMoves fill the provided QVector legalMoves with Squares
@@ -65,7 +74,7 @@ public:
      * @param x
      * @param y
      */
-    void makeMove(int x, int y);
+    void makeMove(int x0, int y0, int x, int y);
     //bool findLegalMoves(bool *legalMoves);
 
     /**
@@ -91,8 +100,6 @@ public:
 
 
 
-
-private:
     QVector<QVector<Square* > > m_boardMatrix;
     Player *m_currentPlayer;
 

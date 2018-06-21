@@ -1,10 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QCloseEvent>
 #include <QMainWindow>
 #include <QSize>
 #include <QDebug>
-
+#include "dialog.h"
 #include "gamelogic/gameengine.h"
 #include "gamelogic/chessengine.h"
 #include "board/board.h"
@@ -19,13 +20,14 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(int type, QWidget *parent = 0);
+    explicit MainWindow(int type, Dialog *diag, QWidget *parent = 0);
     int gametype;
+    Dialog *base_diag;
     ~MainWindow();
 
 public slots:
     void startNewGame();
-
+    void closeEvent(QCloseEvent *event);
 
 private:
     Ui::MainWindow *ui;
