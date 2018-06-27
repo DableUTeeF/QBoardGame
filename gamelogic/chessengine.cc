@@ -78,8 +78,24 @@ void ChessEngine::mouseReleased(QPointF point)
 
 void ChessEngine::firstclickHandling(int x, int y)
 {
+    int attacking = 0;
+    for(int i=0; i<8;i++){
+        for(int j=0; j<8;j++){
+            if(m_board->m_attackingState[j][i]>0){
+                attacking++;
+//                qDebug() << j << i;
+            }
+        }
+    }
+
+    m_board->m_someoneattacking = attacking;
     if(m_board->m_boardMatrix[x][y]->isEmpty() || m_board->m_boardMatrix[x][y]->getOwner() != m_currentPlayer->m_color){
         updateEventText("Wrong squared");
+        return;
+    }
+    else if(attacking>0 && m_board->m_attackingState[x][y]==0){
+        updateEventText("Attacking square please");
+
         return;
     }
     m_board->clicked = !m_board->clicked;
@@ -90,14 +106,18 @@ void ChessEngine::firstclickHandling(int x, int y)
     {
         for(int j = 0; j < 8; j++)
         {
-            if(m_board->m_pieceState[j][i] >= 0)
-            {
+//            if(m_board->m_pieceState[j][i] >= 0)
+//            {
                 state += " ";
-            }
-            state += " " + QString::number(m_board->m_pieceState[j][i]);
+//            }
+//            state += " " + QString::number(m_board->m_attackedState[j][i]);
+            state += " " + QString::number(m_board->m_attackingState[j][i]);
+//            state += " " + QString::number(m_board->m_pieceState[j][i]);
+
         }
         state += "\n";
     }
+    updateEventText(QString::number(m_board->m_someoneattacking));
     updateEventText(state);
 
 }
@@ -147,34 +167,6 @@ void ChessEngine::createPlayers(int numberOfHumans)
     // TODO set players correctly according to parameter numberOfHumans
 }
 
-bool ChessEngine::gameOver()
-{
-    // check if current player has options to make a move
-    if (m_board->getLegalMoves(m_legalMoves) == true)
-    {
-        return false;
-    }
-
-    // make a pass if there are no legal moves left ...
-    makePass();
-    // ... and check if the opponent has legal moves left
-    if(m_board->getLegalMoves(m_legalMoves) == true)
-    {
-        return false;
-    }
-    endgame *ended = new endgame();
-    qDebug() << "Game Over";
-
-    m_gameOver = true;
-    QString gameStats = getGameStats();
-    updateInfoText(gameStats);
-    int numberOfBlackDisks = m_board->m_numberOfBlackDisks;
-    int numberOfWhiteDisks = m_board->m_numberOfWhiteDisks;
-    ended->whowon = numberOfBlackDisks > numberOfWhiteDisks;
-    ended->show();
-    ended->setState(numberOfBlackDisks, numberOfWhiteDisks);
-    return true;
-}
 
 QString ChessEngine::getGameStats()
 {

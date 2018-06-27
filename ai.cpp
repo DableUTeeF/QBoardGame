@@ -82,10 +82,10 @@ int AI::alphaBeta(Board *board, int depth, int alpha, int beta, bool maximizingP
     // TODO time parameter ...
     if (depth = 0 || board->m_gameOver)
     {
-        int boardValue = evaluateBoard(board);
+//        int boardValue = evaluateBoard(board);
         //if (boardValue > maxBoardValue)
 
-        //return ;
+//        return ;
     }
 
     QVector<Board *> possibleBoards = board->makeLegalMoves();

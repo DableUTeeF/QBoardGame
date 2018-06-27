@@ -43,7 +43,9 @@ void ChessBoard::newBoard()
     {
         for (int y = 0; y < BOARD_SIZE; y++)
         {
-
+            m_pieceState[x][y] = 0;
+            m_attackedState[x][y] = 0;
+            m_attackingState[x][y] = 0;
             m_boardMatrix[x][y] = new Square(x,y);
             if(y<=1)  // White
             {
@@ -95,7 +97,7 @@ void ChessBoard::newBoard()
     m_boardMatrix[6][7]->setSquareState(Square::BLACK);
 
     m_numberOfBlackDisks = 8;
-    m_numberOfWhiteDisks = 5;
+    m_numberOfWhiteDisks = 8;
     m_numberOfDisks = 16;
 
     m_gameOver = false;
@@ -133,26 +135,43 @@ void ChessBoard::countDisks(void)
 
 bool ChessBoard::legalMove(int x0, int y0, int x, int y)
 {
-    if(!m_boardMatrix[x][y]->isEmpty())
+    if(m_pieceState[x][y] != 0)
     {
         // Square is not empty
+        qDebug() << "here";
         return false;
     }
     else if((x+y) % 2 != 1)
     {
         // Square is on invalid cross
+        qDebug() << "0here";
         return false;
+    }
+    if(m_someoneattacking>0){
+        if(m_attackingState[x0][y0]==0){
+            // Capture first
+            qDebug() << "1here";
+            return false;
+        }
+        else if(std::abs(m_pieceState[x0][y0])==1){
+            if(std::abs(x0 - x) != 2 || std::abs(y0 - y) != 2 ||m_pieceState[x0][y0] * (y0-y) > 0){
+                // Too far square && Backward move is not allowed
+                qDebug() << "2here";
+                return false;
+            }
+            else if(x > x0 && m_attackedState[x+1][y+m_pieceState[x0][y0]]==1){
+                return true;
+            }
+            else if(x < x0 && m_attackedState[x-1][y+m_pieceState[x0][y0]]==1){
+                return true;
+            }
+        }
     }
     else if(std::abs(m_pieceState[x0][y0])==1)
     {
-        if(std::abs(x0 - x) > 1 || std::abs(y0 - y) > 1)
+        if(std::abs(x0 - x) > 1 || std::abs(y0 - y) > 1 || m_pieceState[x0][y0] * (y0-y) > 0)
         {
-            // Too far square
-            return false;
-        }
-        else if(m_pieceState[x0][y0] * (y0-y) > 0)
-        {
-            // Backward move is not allowed
+            // Too far square && Backward move is not allowed
             return false;
         }
     }
@@ -179,17 +198,17 @@ bool ChessBoard::getLegalMoves(QVector<Square* > *legalMoves)
     {
         for(int y = 0; y < BOARD_SIZE; y++)
         {
-            if (legalMove(NULL, NULL, x, y))
-            {
-                allowedSquare = m_boardMatrix[x][y];
+//            if (legalMove(NULL, NULL, x, y))
+//            {
+//                allowedSquare = m_boardMatrix[x][y];
 
-                // if move is legal, updated the board: set current square in allowed state
-                allowedSquare->setSquareState(Square::ALLOWED);
+//                // if move is legal, updated the board: set current square in allowed state
+//                allowedSquare->setSquareState(Square::ALLOWED);
 
-                // append newly found legal move to legalMoves vector.
-                legalMoves->append(allowedSquare);
-                legalMovesAvailable = true;
-            }
+//                // append newly found legal move to legalMoves vector.
+//                legalMoves->append(allowedSquare);
+//                legalMovesAvailable = true;
+//            }
         }
     }
     m_legalMoves = legalMoves;
@@ -214,23 +233,98 @@ QVector<ChessBoard *> ChessBoard::makeLegalMoves()
 
 void ChessBoard::makeMove(int x0, int y0, int x, int y)
 {
-    // TODO update number of moves if valid;
-    // TODO append to a tree?!
     m_boardMatrix[x][y]->setOwner(m_currentPlayer->m_color);
     m_boardMatrix[x0][y0]->setOwner(Player::NONE);
     m_boardMatrix[x0][y0]->setSquareState(Square::NONE);
     m_pieceState[x0][y0] = 0;
 
-    // TODO this needs some improvement - see also inside while loop
+    // Render board
     emit signalBoardChanged(x0, y0, Player::NONE);
     emit signalBoardChanged(x, y, m_currentPlayer->m_color);
+    // Set piece state to player color
     if (m_currentPlayer->m_color == Player::BLACK)
     {
         m_pieceState[x][y] = -1;
+        // Set attacking and being attacked state to 0
+        if(m_someoneattacking > 0){
+            m_attackingState[x0][y0] = 0;
+            m_attackedState[x0][y0] = 0;
+            m_attackedState[x0-(x0-x)/2][y0+m_pieceState[x][y]] = 0;
+            m_attackingState[x0-(x0-x)/2][y0+m_pieceState[x][y]] = 0;
+
+            m_pieceState[x0-(x0-x)/2][y0+m_pieceState[x][y]] = 0;
+            emit signalBoardChanged(x0-(x0-x)/2, y0+m_pieceState[x][y], Player::NONE);
+        }
+        // Check if any piece is attacking
+        if(x0 < 2 || y0 > 6 || y0 < 0){
+            return;
+        }
+        if(m_pieceState[x+1][y-1]==1){
+            qDebug() << "test";
+            if(m_pieceState[x-2][y+2]==0){
+                m_attackingState[x][y] = 1;
+                m_attackedState[x-1][y+1] = 1;
+            }
+            if(m_pieceState[x-1][y+1]==0){
+                m_attackingState[x+1][y-1] = 1;
+                m_attackedState[x][y] = 1;
+            }
+        }
+        if(m_pieceState[x-1][y-1]==1){
+//            qDebug() << "test";
+            if(m_pieceState[x-2][y-2]==0){
+                m_attackingState[x][y] = 1;
+                m_attackedState[x-1][y-1] = 1;
+            }
+            if(m_pieceState[x+1][y+1]==0){
+//                qDebug() << "test2";
+                m_attackingState[x-1][y-1] = 1;
+                m_attackedState[x][y] = 1;
+            }
+        }
+
     }
     else
     {
         m_pieceState[x][y] = 1;
+        // Set attacking and being attacked state to 0
+        if(m_someoneattacking > 0){
+            m_attackingState[x0][y0] = 0;
+            m_attackedState[x0][y0] = 0;
+            m_attackedState[x0-(x0-x)/2][y0+m_pieceState[x][y]] = 0;
+            m_attackingState[x0-(x0-x)/2][y0+m_pieceState[x][y]] = 0;
+
+            m_pieceState[x0-(x0-x)/2][y0+m_pieceState[x][y]] = 0;
+            emit signalBoardChanged(x0-(x0-x)/2, y0+m_pieceState[x][y], Player::NONE);
+        }
+        // Check if any piece is attacking
+        if(x0 > 5 || y0 > 6 || y0 < 0){
+            return;
+        }
+        if(m_pieceState[x+1][y+1] == -1){
+//            qDebug() << "test";
+            if(m_pieceState[x+2][y+2]==0){
+                m_attackingState[x][y] = 1;
+                m_attackedState[x+1][y+1] = 1;
+            }
+            if(m_pieceState[x-1][y-1]==0){
+//                qDebug() << "test";
+                m_attackingState[x+1][y+1] = 1;
+                m_attackedState[x][y] = 1;
+            }
+
+        }
+        if(m_pieceState[x-1][y+1] == -1){
+            if(m_pieceState[x-2][y+2]==0){
+                m_attackingState[x][y] = 1;
+                m_attackedState[x-1][y+1] = 1;
+            }
+            if(m_pieceState[x+1][y-1]==0){
+                m_attackingState[x-1][y+1] = 1;
+                m_attackedState[x][y] = 1;
+            }
+        }
+
     }
 
 }
